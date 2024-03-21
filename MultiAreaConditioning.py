@@ -43,13 +43,14 @@ class MultiAreaConditioning:
             if k > len(values): break;
             if not torch.is_tensor(kwargs[arg][0][0]): continue;
             
-            x, y = values[k][0], values[k][1]
-            w, h = values[k][2], values[k][3]
+            x, y, w, h, strength = values[k]
 
             # If fullscreen
             if (x == 0 and y == 0 and w == resolutionX and h == resolutionY):
                 for t in kwargs[arg]:
-                    c.append(t)
+                    n = [t[0], t[1].copy()]
+                    n[1] |= { "strength": strength, }
+                    c.append(n)
                 k += 1
                 continue
             
@@ -63,10 +64,11 @@ class MultiAreaConditioning:
 
             for t in kwargs[arg]:
                 n = [t[0], t[1].copy()]
-                n[1]['area'] = (h // 8, w // 8, y // 8, x // 8)
-                n[1]['strength'] = values[k][4]
-                n[1]['min_sigma'] = 0.0
-                n[1]['max_sigma'] = 99.0
+                n[1] |= {
+                    "area": (h // 8, w // 8, y // 8, x // 8),
+                    "strength": strength,
+                    "set_area_to_bounds": False,
+                }
                 
                 c.append(n)
             
